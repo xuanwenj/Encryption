@@ -87,19 +87,21 @@ public class DESSimple {
         this.secretkey = secretkey;
     }
     
-//    public void saveKeyToFile(String filePath) throws IOException {
-//        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filePath))) {
-//            out.writeObject(secretkey);
-//        }
-//    }
+
     public void saveKeyToFile() throws FileNotFoundException, IOException {
     	byte[] keyBytes = secretkey.getEncoded();
     
     	try (FileOutputStream fos = new FileOutputStream("E:\\filepath\\keyPath.txt")) {
             fos.write(keyBytes);
-        }
-    	
+        }    	
+    }  
+    public void saveKeyToFile(String fileName) throws Exception
+    {
+    ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName));
+    // Write the SecretKey object to the file
+    oos.writeObject(this.secretkey);
+    oos.close();
     }
-    	
-   
+    
+    
 }
