@@ -1,6 +1,7 @@
 package application;
 
 import java.beans.Statement;
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -204,6 +205,13 @@ public class Main extends Application {
 						
 		
 						if (rb1.isSelected()&& rb3.isSelected()&&rb5.isSelected()) {
+							//String keyFilePath = "keyFile.txt";
+				            try {
+								des1.saveKeyToFile();
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 							byte[] encryptedData;
 							try {
 								encryptedData = des1.encrypt(text);
