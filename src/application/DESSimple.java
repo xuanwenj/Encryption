@@ -32,10 +32,12 @@ import javax.crypto.spec.IvParameterSpec;
  */
 public class DESSimple {
     
-    private SecretKey secretkey; 
+    private SecretKey secretkey;
+    private String algorithm;
     
-    public DESSimple() throws NoSuchAlgorithmException 
+    public DESSimple(String algorithm) throws NoSuchAlgorithmException 
     {
+    	this.algorithm = algorithm;
         generateKey();
     }
     
@@ -46,7 +48,7 @@ public class DESSimple {
     
     public void generateKey() throws NoSuchAlgorithmException 
     {
-        KeyGenerator keyGen = KeyGenerator.getInstance("DES");
+        KeyGenerator keyGen = KeyGenerator.getInstance(algorithm);
         this.setSecretkey(keyGen.generateKey());        
     }
     
@@ -55,7 +57,7 @@ public class DESSimple {
             InvalidAlgorithmParameterException, IllegalBlockSizeException, 
             BadPaddingException
     {
-        Cipher desCipher = Cipher.getInstance("DES"); // Must specify the mode explicitly as most JCE providers default to ECB mode!!
+        Cipher desCipher = Cipher.getInstance(algorithm); // Must specify the mode explicitly as most JCE providers default to ECB mode!!
         desCipher.init(Cipher.ENCRYPT_MODE, this.getSecretkey());
         byte[] byteDataToEncrypt = strDataToEncrypt.getBytes();
         byte[] byteCipherText = desCipher.doFinal(byteDataToEncrypt);       
@@ -67,7 +69,7 @@ public class DESSimple {
             InvalidAlgorithmParameterException, IllegalBlockSizeException, 
             BadPaddingException
     {        
-        Cipher desCipher = Cipher.getInstance("DES"); // Must specify the mode explicitly as most JCE providers default to ECB mode!!				
+        Cipher desCipher = Cipher.getInstance(algorithm); // Must specify the mode explicitly as most JCE providers default to ECB mode!!				
         desCipher.init(Cipher.DECRYPT_MODE, this.getSecretkey());        
         byte[] byteDecryptedText = desCipher.doFinal(strCipherText);        
         return new String(byteDecryptedText);

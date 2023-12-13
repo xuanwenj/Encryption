@@ -48,6 +48,7 @@ public class Main extends Application {
 	
 
 	DESSimple des1;
+	DESSimple aes1;
 	
 	 public List<String> fetchNames() throws SQLException {
 		   try {
@@ -82,7 +83,8 @@ public class Main extends Application {
 	
 	@Override
 	public void start(Stage primaryStage) throws NoSuchAlgorithmException {
-		des1 = new DESSimple();
+		des1 = new DESSimple("DES");
+		aes1 = new DESSimple("AES");
 		try {
 			BorderPane root = new BorderPane();
 			// VBox for buttons on the left
@@ -198,9 +200,10 @@ public class Main extends Application {
 				submitButton.setOnAction(event -> {
 						String text = textField.getText();
 						
-		
+						//use generated key to encrypt in DES
 						if (rb1.isSelected()&& rb3.isSelected()&&rb5.isSelected()) {
-							String keyFilePath = "E:\\filepath\\keyPath.txt";
+							//String keyFilePath = "E:\\filepath\\keyPath.txt";
+							String keyFilePath = "src\\application\\keyFile.txt";
 				            try {
 								des1.saveKeyToFile(keyFilePath);
 							} catch (Exception e1) {
@@ -216,7 +219,7 @@ public class Main extends Application {
 								// TODO Auto-generated catch block
 								e1.printStackTrace();
 							}
-												
+						//use generated key to decrypt in DES					
 						}else if(rb1.isSelected()&& rb4.isSelected()&&rb5.isSelected()) {
 							byte[] decryptedData;
 							try {
@@ -227,31 +230,56 @@ public class Main extends Application {
 								// TODO Auto-generated catch block
 								e1.printStackTrace();
 							}
+						// use own key to encrypt in DES	
+//						}else if(rb1.isSelected()&& rb3.isSelected()&&rb6.isSelected()){
+//							byte[] encryptedData;
+//							try {
+//								encryptedData = des1.encrypt(text);
+//								String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
+//								String key = keyField.getText();
+//								
+//								byte[] keyByte = Base64.getDecoder().decode(key);
+//								SecretKey givenKey = new SecretKeySpec(keyByte, "DES");
+//								des1.setSecretkey(givenKey);
+//								des1.encrypt(text);
+//								System.out.println(key);
+//								resultField.setText(encryptedText);
+//							} catch (Exception e1) {
+//								// TODO Auto-generated catch block
+//								e1.printStackTrace();
+//							}
 							
-						}else if(rb1.isSelected()&& rb3.isSelected()&&rb6.isSelected()){
+							//use generated key to encrypt in AES							
+						}else if(rb2.isSelected()&& rb3.isSelected()) {
+							String keyFilePath = "src\\application\\keyFile.txt";
+				            try {
+								aes1.saveKeyToFile(keyFilePath);
+							} catch (Exception e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 							byte[] encryptedData;
 							try {
-								encryptedData = des1.encrypt(text);
+								encryptedData = aes1.encrypt(text);
 								String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
-								String key = keyField.getText();
-								
-								byte[] keyByte = Base64.getDecoder().decode(key);
-								SecretKey givenKey = new SecretKeySpec(keyByte, "DES");
-								des1.setSecretkey(givenKey);
-								des1.encrypt(text);
-								System.out.println(key);
 								resultField.setText(encryptedText);
 							} catch (Exception e1) {
 								// TODO Auto-generated catch block
 								e1.printStackTrace();
 							}
 							
-						}else if(rb2.isSelected()&& rb3.isSelected()) {
-							
+							//use generated key to decrypt in AES		
 						}else if(rb2.isSelected()&& rb4.isSelected()) {
-							
-						}
-											 
+							byte[] decryptedData;
+							try {
+								decryptedData = Base64.getDecoder().decode(text);
+								String decryptedText = aes1.decrypt(decryptedData);
+								resultField.setText(decryptedText);
+							} catch (Exception e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}							
+						}											 
 				});
 				inputVBox2.getChildren().addAll( textLabel, textField, keyLabel,row3, row1, row2, submitButton, resultLable, resultField);
 				root.setCenter(inputVBox2);
