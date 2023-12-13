@@ -1,5 +1,7 @@
 package application;
 
+import java.io.File;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -18,13 +20,17 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Base64;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
@@ -89,20 +95,34 @@ public class DESSimple {
         this.secretkey = secretkey;
     }
     
-
-    public void saveKeyToFile() throws FileNotFoundException, IOException {
-    	byte[] keyBytes = secretkey.getEncoded();
-    
-    	try (FileOutputStream fos = new FileOutputStream("E:\\filepath\\keyPath.txt")) {
-            fos.write(keyBytes);
-        }    	
-    }  
-    public void saveKeyToFile(String fileName) throws Exception
+    /**
+     * 
+     * @throws FileNotFoundException
+     * @throws IOException
+     * save key to file
+     */
+      
+    public void saveKeyToFile(File fileName) throws Exception
     {
-    ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName));
+    	FileOutputStream fs = new FileOutputStream(fileName);
+   
+    ObjectOutputStream oos = new ObjectOutputStream(fs);
+    //CipherOutputStream cos = new CipherOutputStream(new FileOutputStream(fileName),**algorithem*);
     // Write the SecretKey object to the file
     oos.writeObject(this.secretkey);
     oos.close();
+    }
+    
+    public SecretKey loadKeyFile(String fileName) throws IOException {
+        byte[] keyBytes;
+        try (FileInputStream fis = new FileInputStream(fileName)) {
+            keyBytes = fis.readAllBytes();
+        }
+        return new SecretKeySpec(keyBytes, algorithm);
+    }
+
+    public SecretKey loadKeyFromFile() throws IOException {
+        return loadKeyFile("src\\application\\keyFile.txt");
     }
     
     

@@ -24,6 +24,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -101,18 +102,20 @@ public class Main extends Application {
 		    
 		    Button btnCaesarE = new Button();
 			Button btnModern = new Button();
-			Button btnLoadFile = new Button();
+			//Button btnLoadFile = new Button();
+			Button btnSaveKey = new Button();
 			btnCaesarE.setText("Caesar Cipher");
-			btnModern.setText("DES Cipher");
-			btnLoadFile.setText("Load File");
-			vbox.getChildren().addAll(btnCaesarE,btnModern,btnLoadFile);
+			btnModern.setText("Modern Cipher");
+			btnSaveKey.setText("Save Key");
+			//btnLoadFile.setText("Load File");
+			vbox.getChildren().addAll(btnCaesarE,btnModern);
 			root.setLeft(vbox);
 					
 			
-			btnLoadFile.setOnAction(event -> {
-				
-				
-			});
+//			btnLoadFile.setOnAction(event -> {
+//				
+//				
+//			});
 			
 			btnCaesarE.setOnAction(event -> {
 				VBox inputVBox1 = new VBox();
@@ -125,7 +128,7 @@ public class Main extends Application {
 
 				ChoiceBox<String> cb = new ChoiceBox<String>(FXCollections.observableArrayList("Encrypt", "Decrypt"));
 				cb.setValue("Encrypt");
-				Label resultLable = new Label("Result:");
+				Label resultLable = new Label("Encrypted/Decrypted Result:");
 				TextField resultField = new TextField();
 				resultField.setEditable(false);
 
@@ -141,11 +144,9 @@ public class Main extends Application {
 					} else {
 						result = c.dencrypt(text.toUpperCase(), key);
 					}
-
-					resultField.setText(result);
-				
+					resultField.setText(result);				
 				});
-				inputVBox1.getChildren().addAll( textLabel, textField, keyField, cb, submitButton, resultLable,resultField);
+				inputVBox1.getChildren().addAll(textLabel, textField, keyField, cb, submitButton, resultLable,resultField);
 				root.setCenter(inputVBox1);
             });
 			
@@ -156,6 +157,7 @@ public class Main extends Application {
 				Label textLabel = new Label("Enter your text:");
 				TextField textField = new TextField();
 				Label keyLabel = new Label("Enter your key:");
+				TextField showKeyField = new TextField();
 				TextField keyField = new TextField();
 				
 				HBox row1 = new HBox();
@@ -189,14 +191,42 @@ public class Main extends Application {
 				rb6.setText("Use Your Own Key");
 				rb6.setToggleGroup(group3);
 				row3.getChildren().addAll(rb5, rb6);
-				
+				// button rb5 "Generate a Key" is selected
+				rb5.selectedProperty().addListener(new ChangeListener<Boolean>() {
+//					rb5.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
+				    
+				    public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected, Boolean isNowSelected) {
+				        if (isNowSelected) { 
+				        	inputVBox2.getChildren().add(5,showKeyField);
+				        	inputVBox2.getChildren().add(6,btnSaveKey);
+				        	showKeyField.setEditable(false);
+				        }else {
+				        	inputVBox2.getChildren().remove(5);
+				        	inputVBox2.getChildren().remove(6);	
+				        	
+				        }
+				    }
+//					if (isNowSelected) {
+//	                    showKeyField.setVisible(true);
+//	                    btnSaveKey.setVisible(true);
+//	                    showKeyField.setEditable(false);
+//	                } else {
+//	                    showKeyField.setVisible(false);
+//	                    btnSaveKey.setVisible(false);
+//	                }
+				    
+				    });
+				// button rb5 "Use your own Key" is selected
 				rb6.selectedProperty().addListener(new ChangeListener<Boolean>() {
 				    @Override
 				    public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected, Boolean isNowSelected) {
 				        if (isNowSelected) { 
-				        	inputVBox2.getChildren().add(4,keyField);
+				        	inputVBox2.getChildren().add(5,keyField);
+				        	inputVBox2.getChildren().add(6,btnSaveKey);
 				        }else {
-				        	inputVBox2.getChildren().remove(4);
+				        	inputVBox2.getChildren().remove(5);
+				        	inputVBox2.getChildren().remove(6);
+				        	
 				        }
 				    }
 				    });
@@ -207,21 +237,35 @@ public class Main extends Application {
 				Label resultLable = new Label("Result:");
 				TextField resultField = new TextField();
 				resultField.setEditable(false);
-				
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.getExtensionFilters().addAll(
+					     new FileChooser.ExtensionFilter("Text Files", "*.txt")
+					   
+					);
+				btnSaveKey.setOnAction(event ->{
+					 java.io.File file = fileChooser.showSaveDialog(primaryStage);
+					 try {
+						des1.saveKeyToFile(file);
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					 
+				});
 				Button submitButton = new Button("Submit");
 				submitButton.setOnAction(event -> {
 						String text = textField.getText();
-						
+						showKeyField.setText(Base64.getEncoder().encodeToString(des1.getSecretkey().getEncoded()));
 						//use generated key to encrypt in DES
 						if (rb1.isSelected()&& rb3.isSelected()&&rb5.isSelected()) {
 							//String keyFilePath = "E:\\filepath\\keyPath.txt";
-							String keyFilePath = "src\\application\\keyFile.txt";
-				            try {
-								des1.saveKeyToFile(keyFilePath);
-							} catch (Exception e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
+							//String keyFilePath = "src\\application\\keyFile.txt";
+//				            try {
+//								des1.saveKeyToFile(keyFilePath);
+//							} catch (Exception e1) {
+//								// TODO Auto-generated catch block
+//								e1.printStackTrace();
+//							}
 							byte[] encryptedData;
 							try {
 								encryptedData = des1.encrypt(text);
@@ -266,13 +310,13 @@ public class Main extends Application {
 							
 							//use generated key to encrypt in AES							
 						}else if(rb2.isSelected()&& rb3.isSelected()) {
-							String keyFilePath = "src\\application\\keyFile.txt";
-				            try {
-								aes1.saveKeyToFile(keyFilePath);
-							} catch (Exception e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
+//							String keyFilePath = "src\\application\\keyFile.txt";
+//				            try {
+//								aes1.saveKeyToFile(keyFilePath);
+//							} catch (Exception e1) {
+//								// TODO Auto-generated catch block
+//								e1.printStackTrace();
+//							}
 							byte[] encryptedData;
 							try {
 								encryptedData = aes1.encrypt(text);
@@ -296,8 +340,9 @@ public class Main extends Application {
 							}							
 						}											 
 				});
-				inputVBox2.getChildren().addAll( textLabel, textField, keyLabel,row3, row1, row2, submitButton, resultLable, resultField);
+				inputVBox2.getChildren().addAll( textLabel, textField, keyLabel, row1, row3,  row2, submitButton, resultLable, resultField);
 				root.setCenter(inputVBox2);
+				//showKeyField, btnSaveKey,
 				
 				//end of btn
 			});
