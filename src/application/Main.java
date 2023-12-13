@@ -98,17 +98,29 @@ public class Main extends Application {
 		    MenuItem modern = new MenuItem("Modern Cipher");
 		    settingMenu.getItems().addAll(caesar, modern);
 		    menuBar.getMenus().add(settingMenu);
-
-			vbox.getChildren().addAll(menuBar);
+		    
+		    Button btnCaesarE = new Button();
+			Button btnModern = new Button();
+			Button btnLoadFile = new Button();
+			btnCaesarE.setText("Caesar Cipher");
+			btnModern.setText("DES Cipher");
+			btnLoadFile.setText("Load File");
+			vbox.getChildren().addAll(btnCaesarE,btnModern,btnLoadFile);
 			root.setLeft(vbox);
+					
 			
-			caesar.setOnAction(event -> {
+			btnLoadFile.setOnAction(event -> {
+				
+				
+			});
+			
+			btnCaesarE.setOnAction(event -> {
 				VBox inputVBox1 = new VBox();
 				inputVBox1.setPadding(new Insets(20, 20, 20, 20));
 				inputVBox1.setSpacing(10);
 				Label textLabel = new Label("Enter your text:");
 				TextField textField = new TextField();
-				Label keyLabel = new Label("Enter your key:");
+				//Label keyLabel = new Label("Enter your key:");
 				TextField keyField = new TextField();
 
 				ChoiceBox<String> cb = new ChoiceBox<String>(FXCollections.observableArrayList("Encrypt", "Decrypt"));
@@ -133,11 +145,11 @@ public class Main extends Application {
 					resultField.setText(result);
 				
 				});
-				inputVBox1.getChildren().addAll( textLabel, textField, keyLabel, keyField, cb, submitButton, resultLable,resultField);
+				inputVBox1.getChildren().addAll( textLabel, textField, keyField, cb, submitButton, resultLable,resultField);
 				root.setCenter(inputVBox1);
             });
 			
-			modern.setOnAction(e -> {
+			btnModern.setOnAction(e -> {
 				VBox inputVBox2 = new VBox();
 				inputVBox2.setPadding(new Insets(20, 20, 20, 20));
 				inputVBox2.setSpacing(10);
@@ -215,6 +227,8 @@ public class Main extends Application {
 								encryptedData = des1.encrypt(text);
 								String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
 								resultField.setText(encryptedText);
+								System.out.println(Base64.getEncoder().encodeToString(des1.getSecretkey().getEncoded()));
+								
 							} catch (Exception e1) {
 								// TODO Auto-generated catch block
 								e1.printStackTrace();
@@ -231,23 +245,24 @@ public class Main extends Application {
 								e1.printStackTrace();
 							}
 						// use own key to encrypt in DES	
-//						}else if(rb1.isSelected()&& rb3.isSelected()&&rb6.isSelected()){
-//							byte[] encryptedData;
-//							try {
-//								encryptedData = des1.encrypt(text);
-//								String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
-//								String key = keyField.getText();
-//								
-//								byte[] keyByte = Base64.getDecoder().decode(key);
-//								SecretKey givenKey = new SecretKeySpec(keyByte, "DES");
-//								des1.setSecretkey(givenKey);
-//								des1.encrypt(text);
-//								System.out.println(key);
-//								resultField.setText(encryptedText);
-//							} catch (Exception e1) {
-//								// TODO Auto-generated catch block
-//								e1.printStackTrace();
-//							}
+						}else if(rb1.isSelected()&& rb3.isSelected()&&rb6.isSelected()){
+							byte[] encryptedData;
+							try {
+								String key = keyField.getText();
+								
+								byte[] keyByte = Base64.getDecoder().decode(key);
+								SecretKey givenKey = new SecretKeySpec(keyByte, "DES");
+								des1.setSecretkey(givenKey);
+								System.out.println(key);
+								
+								encryptedData = des1.encrypt(text);
+								String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
+
+								resultField.setText(encryptedText);
+							} catch (Exception e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 							
 							//use generated key to encrypt in AES							
 						}else if(rb2.isSelected()&& rb3.isSelected()) {
