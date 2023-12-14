@@ -1,7 +1,11 @@
 package application;
 
 import java.beans.Statement;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -12,8 +16,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
@@ -33,10 +39,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -46,84 +54,144 @@ public class Main extends Application {
 	static final String USERNAME = "root";
 	static final String PASSWORD = ""; // null password
 	List<String> algorithmList = new ArrayList<>();
-	
 
 	DESSimple des1;
 	DESSimple aes1;
-	
-	 public List<String> fetchNames() throws SQLException {
-		   try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-		
-		    // Open a connection
-		    Connection connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);		   
-		    java.sql.Statement statement = connection.createStatement();
-		    String sql = "SELECT * FROM algorithms";
-		    ResultSet resultSet = statement.executeQuery(sql);
-		    //            1/ Go through the result set to print it
-		    while (resultSet.next()) {
-		    // Retrieve data by column name
-		        String algorithmName = resultSet.getString("name");
-		        algorithmList.add(algorithmName);
-		        
-		    }
-		    resultSet.close();
-		    statement.close();
-		    connection.close();	
-		   } catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		//Close external resources
-		    
-			return algorithmList;
-					}
-	
-	
-	
-	
+	int keySize;
+	RadioButton aes128 = new RadioButton();
+	RadioButton aes192 = new RadioButton();
+	RadioButton aes256 = new RadioButton();
+//
+//	public List<String> fetchNames() throws SQLException {
+//		try {
+//			Class.forName("com.mysql.cj.jdbc.Driver");
+//
+//			// Open a connection
+//			Connection connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
+//			java.sql.Statement statement = connection.createStatement();
+//			String sql = "SELECT * FROM algorithms";
+//			ResultSet resultSet = statement.executeQuery(sql);
+//			// 1/ Go through the result set to print it
+//			while (resultSet.next()) {
+//				// Retrieve data by column name
+//				String algorithmName = resultSet.getString("name");
+//				algorithmList.add(algorithmName);
+//
+//			}
+//			resultSet.close();
+//			statement.close();
+//			connection.close();
+//		} catch (ClassNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		// Close external resources
+//
+//		return algorithmList;
+//	}
+
 	@Override
 	public void start(Stage primaryStage) throws NoSuchAlgorithmException {
-		des1 = new DESSimple("DES");
-		aes1 = new DESSimple("AES");
+		des1 = new DESSimple("DES", 56);
+		aes1 = new DESSimple("AES", 128);
+		
+		    GridPane loginPane = new GridPane();
+	        loginPane.setPadding(new Insets(20));
+	        loginPane.setVgap(10);
+	        loginPane.setHgap(10);
+
+	        Label usernameLabel = new Label("Username:");
+	        TextField usernameField = new TextField();
+	        Label passwordLabel = new Label("Password:");
+	        PasswordField passwordField = new PasswordField();
+	        Button loginButton = new Button("Login");
+
+	        loginPane.add(usernameLabel, 0, 0);
+	        loginPane.add(usernameField, 1, 0);
+	        loginPane.add(passwordLabel, 0, 1);
+	        loginPane.add(passwordField, 1, 1);
+	        loginPane.add(loginButton, 1, 2);
+
+	        Scene loginScene = new Scene(loginPane, 300, 150);
+	        BorderPane root = new BorderPane();
+	        Scene scene = new Scene(root, 400, 400);
+	        primaryStage.setScene(loginScene);
+	        primaryStage.show();
+		
+		
+		loginButton.setOnAction(event ->{
+			primaryStage.setScene(scene);
+	        primaryStage.show();
+		});
+		
+		 int loadedKeySize = readKeySize();
+		 if (loadedKeySize == 128) {
+		        aes128.setSelected(true);
+		    } else if (loadedKeySize == 192) {
+		        aes192.setSelected(true);
+		    } else if (loadedKeySize == 256) {
+		        aes256.setSelected(true);
+		    }
 		try {
-			BorderPane root = new BorderPane();
-			// VBox for buttons on the left
-			VBox vbox = new VBox();
-			vbox.setPadding(new Insets(20, 20, 20, 20));
-			vbox.setSpacing(10);
 			
+			// VBox for buttons on the left
+			VBox vboxLeft = new VBox();
+			vboxLeft.setPadding(new Insets(20, 20, 20, 20));
+			vboxLeft.setSpacing(10);
+
 			MenuBar menuBar = new MenuBar();
 			Menu settingMenu = new Menu("Settings");
-		    MenuItem caesar = new MenuItem("Caesar Cipher");
-		    MenuItem modern = new MenuItem("Modern Cipher");
-		    settingMenu.getItems().addAll(caesar, modern);
-		    menuBar.getMenus().add(settingMenu);
-		    
-		    Button btnCaesarE = new Button();
+			MenuItem aes = new MenuItem("AES Key Length");
+			settingMenu.getItems().addAll(aes);
+			menuBar.getMenus().add(settingMenu);
+
+			Button btnCaesarE = new Button();
 			Button btnModern = new Button();
-			//Button btnLoadFile = new Button();
+			Button btnLoadFile = new Button();
 			Button btnSaveKey = new Button();
 			btnCaesarE.setText("Caesar Cipher");
 			btnModern.setText("Modern Cipher");
 			btnSaveKey.setText("Save Key");
-			//btnLoadFile.setText("Load File");
-			vbox.getChildren().addAll(btnCaesarE,btnModern);
-			root.setLeft(vbox);
-					
-			
-//			btnLoadFile.setOnAction(event -> {
-//				
-//				
-//			});
-			
+			btnLoadFile.setText("Load File");
+			vboxLeft.getChildren().addAll(btnCaesarE, btnModern, menuBar);
+			root.setLeft(vboxLeft);
+
+			// action on aes MenuItem
+			aes.setOnAction(event -> {
+				VBox bitVox = new VBox();
+				bitVox.setPadding(new Insets(20, 20, 20, 20));
+				bitVox.setSpacing(10);
+				ToggleGroup group = new ToggleGroup();
+//				aes128 = new RadioButton();
+//				aes192 = new RadioButton();
+//				aes256 = new RadioButton();
+				aes128.setText("AES-128");
+				aes128.setUserData(128);
+				aes192.setText("AES-192");
+				aes192.setUserData(192);
+				aes256.setText("AES-256");
+				aes256.setUserData(256);
+				group.getToggles().addAll(aes128,aes192,aes256);
+
+				Button submit = new Button();
+				submit.setText("Submit");
+				Label messageLabel = new Label("You need to choose before submit.");
+				messageLabel.setVisible(false);
+				bitVox.getChildren().addAll(aes128, aes192, aes256, submit, messageLabel);
+				root.setCenter(bitVox);
+
+				submit.setOnAction(event1 -> {
+					 saveKeySizeToFile((int)group.getSelectedToggle().getUserData());
+				});
+			});
+			// action on CaesarE button
 			btnCaesarE.setOnAction(event -> {
 				VBox inputVBox1 = new VBox();
 				inputVBox1.setPadding(new Insets(20, 20, 20, 20));
 				inputVBox1.setSpacing(10);
 				Label textLabel = new Label("Enter your text:");
 				TextField textField = new TextField();
-				//Label keyLabel = new Label("Enter your key:");
+				// Label keyLabel = new Label("Enter your key:");
 				TextField keyField = new TextField();
 
 				ChoiceBox<String> cb = new ChoiceBox<String>(FXCollections.observableArrayList("Encrypt", "Decrypt"));
@@ -144,12 +212,13 @@ public class Main extends Application {
 					} else {
 						result = c.dencrypt(text.toUpperCase(), key);
 					}
-					resultField.setText(result);				
+					resultField.setText(result);
 				});
-				inputVBox1.getChildren().addAll(textLabel, textField, keyField, cb, submitButton, resultLable,resultField);
+				inputVBox1.getChildren().addAll(textLabel, textField, keyField, cb, submitButton, resultLable,
+						resultField);
 				root.setCenter(inputVBox1);
-            });
-			
+			});
+
 			btnModern.setOnAction(e -> {
 				VBox inputVBox2 = new VBox();
 				inputVBox2.setPadding(new Insets(20, 20, 20, 20));
@@ -159,203 +228,292 @@ public class Main extends Application {
 				Label keyLabel = new Label("Enter your key:");
 				TextField showKeyField = new TextField();
 				TextField keyField = new TextField();
-				
-				HBox row1 = new HBox();
+
+				HBox rowDESAES = new HBox();
 				ToggleGroup group1 = new ToggleGroup();
-				RadioButton rb1 = new RadioButton();			
-				rb1.setText("DES");
-				rb1.setToggleGroup(group1);
-				RadioButton rb2 = new RadioButton();
-				rb2.setText("AES");
-				rb2.setToggleGroup(group1);
-				row1.getChildren().addAll(rb1, rb2);
-				
-				
-				HBox row2 = new HBox();
+				RadioButton btnDes = new RadioButton();
+				btnDes.setText("DES");
+				btnDes.setToggleGroup(group1);
+				RadioButton btnAes = new RadioButton();
+				btnAes.setText("AES");
+				btnAes.setToggleGroup(group1);
+				rowDESAES.getChildren().addAll(btnDes, btnAes);
+
+				HBox rowEncryptDecrypt = new HBox();
 				ToggleGroup group2 = new ToggleGroup();
-				RadioButton rb3 = new RadioButton();
-				rb3.setText("Encrypt");
-				rb3.setToggleGroup(group2);
-				RadioButton rb4 = new RadioButton();
-				rb4.setText("Decrypt");
-				rb4.setToggleGroup(group2);
-				row2.getChildren().addAll(rb3, rb4);
-				
+				RadioButton encrypt = new RadioButton();
+				encrypt.setText("Encrypt");
+				encrypt.setToggleGroup(group2);
+				RadioButton decrypt = new RadioButton();
+				decrypt.setText("Decrypt");
+				decrypt.setToggleGroup(group2);
+				rowEncryptDecrypt.getChildren().addAll(encrypt, decrypt);
+
 				HBox row3 = new HBox();
 				ToggleGroup group3 = new ToggleGroup();
-				RadioButton rb5 = new RadioButton();
-				rb5.setText("Generate a Key");
-				rb5.setToggleGroup(group3);
-				
-				RadioButton rb6 = new RadioButton();
-				rb6.setText("Use Your Own Key");
-				rb6.setToggleGroup(group3);
-				row3.getChildren().addAll(rb5, rb6);
+				RadioButton generateKey = new RadioButton();
+				generateKey.setText("Generate a Key");
+				generateKey.setToggleGroup(group3);
+
+				RadioButton ownKey = new RadioButton();
+				ownKey.setText("Use Your Own Key");
+				ownKey.setToggleGroup(group3);
+				row3.getChildren().addAll(generateKey, ownKey);
+
 				// button rb5 "Generate a Key" is selected
-				rb5.selectedProperty().addListener(new ChangeListener<Boolean>() {
-//					rb5.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
-				    
-				    public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected, Boolean isNowSelected) {
-				        if (isNowSelected) { 
-				        	inputVBox2.getChildren().add(5,showKeyField);
-				        	inputVBox2.getChildren().add(6,btnSaveKey);
-				        	showKeyField.setEditable(false);
-				        }else {
-				        	inputVBox2.getChildren().remove(5);
-				        	inputVBox2.getChildren().remove(6);	
-				        	
-				        }
-				    }
-//					if (isNowSelected) {
-//	                    showKeyField.setVisible(true);
-//	                    btnSaveKey.setVisible(true);
-//	                    showKeyField.setEditable(false);
-//	                } else {
-//	                    showKeyField.setVisible(false);
-//	                    btnSaveKey.setVisible(false);
-//	                }
-				    
-				    });
-				// button rb5 "Use your own Key" is selected
-				rb6.selectedProperty().addListener(new ChangeListener<Boolean>() {
-				    @Override
-				    public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected, Boolean isNowSelected) {
-				        if (isNowSelected) { 
-				        	inputVBox2.getChildren().add(5,keyField);
-				        	inputVBox2.getChildren().add(6,btnSaveKey);
-				        }else {
-				        	inputVBox2.getChildren().remove(5);
-				        	inputVBox2.getChildren().remove(6);
-				        	
-				        }
-				    }
-				    });
-				row1.setSpacing(80);
-				row2.setSpacing(70);
-				row3.setSpacing(40);
-				
-				Label resultLable = new Label("Result:");
+				generateKey.selectedProperty().addListener(new ChangeListener<Boolean>() {
+					public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected,
+							Boolean isNowSelected) {
+//						if (isNowSelected) {
+//							inputVBox2.getChildren().add(5, showKeyField);
+//							inputVBox2.getChildren().add(6, btnSaveKey);
+//							showKeyField.setEditable(false);
+//						} else {
+//							inputVBox2.getChildren().remove(5);
+//							inputVBox2.getChildren().remove(6);
+//						}
+						 if (isNowSelected) {
+					            if (!inputVBox2.getChildren().contains(showKeyField)) {
+					                inputVBox2.getChildren().add(5, showKeyField);
+					            }
+					            if (!inputVBox2.getChildren().contains(btnSaveKey)) {
+					                inputVBox2.getChildren().add(6, btnSaveKey);
+					            }
+					            showKeyField.setEditable(false);
+					        } else {
+					            inputVBox2.getChildren().remove(showKeyField);
+					            inputVBox2.getChildren().remove(btnSaveKey);
+					        }
+					    
+					}
+				});
+				// button "Use your own Key" is selected
+				HBox buttonBox = new HBox();
+				buttonBox.setSpacing(70);
+				buttonBox.getChildren().addAll(btnSaveKey, btnLoadFile);
+				ownKey.selectedProperty().addListener(new ChangeListener<Boolean>() {
+					@Override
+					public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected,
+							Boolean isNowSelected) {
+//						if (isNowSelected) {
+//							inputVBox2.getChildren().add(5, keyField);
+//							inputVBox2.getChildren().add(6, buttonBox);
+//
+//						} else {
+//							inputVBox2.getChildren().remove(5);
+//							inputVBox2.getChildren().remove(6);
+//						}
+//						
+						
+						 if (isNowSelected) {
+					            if (!inputVBox2.getChildren().contains(keyField)) {
+					                inputVBox2.getChildren().add(5, keyField);
+					            }
+					            if (!inputVBox2.getChildren().contains(buttonBox)) {
+					                inputVBox2.getChildren().add(6, buttonBox);
+					            }
+					         
+					        } else {
+					            inputVBox2.getChildren().remove(keyField);
+					            inputVBox2.getChildren().remove(buttonBox);
+					        }
+						
+						
+					}
+				});
+				rowDESAES.setSpacing(90);
+				rowEncryptDecrypt.setSpacing(70);
+				row3.setSpacing(25);
+
+				Label resultLable = new Label("Encrypted/Decrypted Result:");
 				TextField resultField = new TextField();
 				resultField.setEditable(false);
 				FileChooser fileChooser = new FileChooser();
-				fileChooser.getExtensionFilters().addAll(
-					     new FileChooser.ExtensionFilter("Text Files", "*.txt")
-					   
-					);
-				btnSaveKey.setOnAction(event ->{
-					 java.io.File file = fileChooser.showSaveDialog(primaryStage);
-					 try {
+				fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files", "*.txt")
+
+				);
+				btnSaveKey.setOnAction(event -> {
+					java.io.File file = fileChooser.showSaveDialog(primaryStage);
+					try {
 						des1.saveKeyToFile(file);
 					} catch (Exception e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-					 
+
 				});
 				Button submitButton = new Button("Submit");
 				submitButton.setOnAction(event -> {
-						String text = textField.getText();
-						showKeyField.setText(Base64.getEncoder().encodeToString(des1.getSecretkey().getEncoded()));
-						//use generated key to encrypt in DES
-						if (rb1.isSelected()&& rb3.isSelected()&&rb5.isSelected()) {
-							//String keyFilePath = "E:\\filepath\\keyPath.txt";
-							//String keyFilePath = "src\\application\\keyFile.txt";
-//				            try {
-//								des1.saveKeyToFile(keyFilePath);
-//							} catch (Exception e1) {
-//								// TODO Auto-generated catch block
-//								e1.printStackTrace();
-//							}
-							byte[] encryptedData;
-							try {
-								encryptedData = des1.encrypt(text);
-								String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
-								resultField.setText(encryptedText);
-								System.out.println(Base64.getEncoder().encodeToString(des1.getSecretkey().getEncoded()));
-								
-							} catch (Exception e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
-						//use generated key to decrypt in DES					
-						}else if(rb1.isSelected()&& rb4.isSelected()&&rb5.isSelected()) {
-							byte[] decryptedData;
-							try {
-								decryptedData = Base64.getDecoder().decode(text);
-								String decryptedText = des1.decrypt(decryptedData);
-								resultField.setText(decryptedText);
-							} catch (Exception e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
-						// use own key to encrypt in DES	
-						}else if(rb1.isSelected()&& rb3.isSelected()&&rb6.isSelected()){
-							byte[] encryptedData;
-							try {
-								String key = keyField.getText();
-								
-								byte[] keyByte = Base64.getDecoder().decode(key);
-								SecretKey givenKey = new SecretKeySpec(keyByte, "DES");
-								des1.setSecretkey(givenKey);
-								System.out.println(key);
-								
-								encryptedData = des1.encrypt(text);
-								String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
+					String text = textField.getText();
+					showKeyField.setText(Base64.getEncoder().encodeToString(des1.getSecretkey().getEncoded()));
 
-								resultField.setText(encryptedText);
-							} catch (Exception e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
-							
-							//use generated key to encrypt in AES							
-						}else if(rb2.isSelected()&& rb3.isSelected()) {
-//							String keyFilePath = "src\\application\\keyFile.txt";
-//				            try {
-//								aes1.saveKeyToFile(keyFilePath);
-//							} catch (Exception e1) {
-//								// TODO Auto-generated catch block
-//								e1.printStackTrace();
-//							}
-							byte[] encryptedData;
-							try {
-								encryptedData = aes1.encrypt(text);
-								String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
-								resultField.setText(encryptedText);
-							} catch (Exception e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
-							
-							//use generated key to decrypt in AES		
-						}else if(rb2.isSelected()&& rb4.isSelected()) {
-							byte[] decryptedData;
-							try {
-								decryptedData = Base64.getDecoder().decode(text);
-								String decryptedText = aes1.decrypt(decryptedData);
-								resultField.setText(decryptedText);
-							} catch (Exception e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}							
-						}											 
-				});
-				inputVBox2.getChildren().addAll( textLabel, textField, keyLabel, row1, row3,  row2, submitButton, resultLable, resultField);
-				root.setCenter(inputVBox2);
-				//showKeyField, btnSaveKey,
-				
-				//end of btn
-			});
+					// use generated key to encrypt in DES
+					if (btnDes.isSelected() && encrypt.isSelected() && generateKey.isSelected()) {
 					
+						byte[] encryptedData;
+						try {
+							encryptedData = des1.encrypt(text);
+							String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
+							resultField.setText(encryptedText);
+							System.out.println(Base64.getEncoder().encodeToString(des1.getSecretkey().getEncoded()));
+
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						// use generated key to decrypt in DES
+					} else if (btnDes.isSelected() && decrypt.isSelected() && generateKey.isSelected()) {
+						byte[] decryptedData;
+						try {
+							decryptedData = Base64.getDecoder().decode(text);
+							String decryptedText = des1.decrypt(decryptedData);
+							resultField.setText(decryptedText);
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						// use own key to encrypt in DES
+					} else if (btnDes.isSelected() && encrypt.isSelected() && ownKey.isSelected()) {
+						byte[] encryptedData;
+						try {
+							String key = keyField.getText();
+
+							byte[] keyByte = Base64.getDecoder().decode(key);
+							SecretKey givenKey = new SecretKeySpec(keyByte, "DES");
+							des1.setSecretkey(givenKey);
+							System.out.println(key);
+
+							encryptedData = des1.encrypt(text);
+							String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
+
+							resultField.setText(encryptedText);
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+
+						// use own key to decrypt in DES
+					} else if (btnDes.isSelected() && decrypt.isSelected() && ownKey.isSelected()) {
+						
+						byte[] decryptedData;
+						try {
+							decryptedData = Base64.getDecoder().decode(text);
+							String decryptedText = des1.decrypt(decryptedData);
+							resultField.setText(decryptedText);
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					
+					} else if (btnAes.isSelected() && encrypt.isSelected()) {
+
+						byte[] encryptedData;
+						try {
+							encryptedData = aes1.encrypt(text);
+							String encryptedText = Base64.getEncoder().encodeToString(encryptedData);
+							resultField.setText(encryptedText);
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+
+						// use generated key to decrypt in AES
+					} else if (btnAes.isSelected() && decrypt.isSelected()) {
+						byte[] decryptedData;
+						try {
+							decryptedData = Base64.getDecoder().decode(text);
+							String decryptedText = aes1.decrypt(decryptedData);
+							resultField.setText(decryptedText);
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+				});
+				inputVBox2.getChildren().addAll(textLabel, textField, keyLabel, rowDESAES, rowEncryptDecrypt, row3,
+						submitButton, resultLable, resultField);
+				root.setCenter(inputVBox2);
+
+				btnLoadFile.setOnAction(event1 -> {
+					FileChooser fc = new FileChooser();
+					File selectedFile = fc.showOpenDialog(primaryStage);
+					if (selectedFile != null) {
+						try {
+							if (btnDes.isSelected()) {
+								SecretKey loadedKey = des1.loadKeyFromFile(selectedFile);
+								des1.setSecretkey(loadedKey);
+								keyField.setText(Base64.getEncoder().encodeToString(loadedKey.getEncoded()));
+							} else if (btnAes.isSelected()) {
+								SecretKey loadedKey = aes1.loadKeyFromFile(selectedFile);
+								aes1.setSecretkey(loadedKey);
+								keyField.setText(Base64.getEncoder().encodeToString(loadedKey.getEncoded()));
+							}
+						} catch (ClassNotFoundException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						// Use the loadedKey for decryption or any other operation
+						System.out.println("Key loaded successfully.");
+
+					} else {
+						System.out.println("No file selected.");
+					}
+				});
+
+			});// end of btn
 			
-			//the main scene
-			Scene scene = new Scene(root, 400, 400);
+			// the main scene
+			
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-			primaryStage.setScene(scene);
-			primaryStage.show();
+			//primaryStage.setScene(scene);
+			//primaryStage.show();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+	}
+	private void saveKeySizeToFile(int keySize) {
+		System.out.println(keySize);
+	    try {
+	        // Specify the file path where you want to save the key size
+	        String filePath = "keySize.txt";
+
+	        // Create a file object
+	        File file = new File(filePath);
+
+	        PrintWriter pw = new PrintWriter(file);
+	 
+	        // Write the key size to the file
+	        pw.write(Integer.toString(keySize));
+	        pw.close();
+
+
+	        System.out.println("Key size saved to file successfully.");
+	    } catch (IOException e) {
+	        System.out.println("Error saving key size to file: " + e.getMessage());
+	    }
+	}
+	private int readKeySize() {
+	    int loadedKeySize = -1; // Initialize with a default value
+	    try {
+	        File file = new File("keySize.txt");
+
+	        if (file.exists()) {
+	            // Read the key size from the file
+	            Scanner scanner = new Scanner(file);
+	            if (scanner.hasNextLine()) {
+	                loadedKeySize = Integer.parseInt(scanner.nextLine());
+	            }
+	            scanner.close();
+	        }
+	    } catch (IOException e) {
+	        System.out.println("Error reading key size from file: " + e.getMessage());
+	    }
+
+	    return loadedKeySize;
 	}
 
 	public static void main(String[] args) {
