@@ -108,7 +108,7 @@ public class Main extends Application {
 
 	        Scene loginScene = new Scene(loginPane, 300, 300);
 	        BorderPane root = new BorderPane();
-	        Scene scene = new Scene(root, 400, 400);
+	        Scene scene = new Scene(root, 500, 500);
 	        primaryStage.setScene(loginScene);
 	        primaryStage.show();
 		
@@ -150,12 +150,14 @@ public class Main extends Application {
 
 			Button btnCaesarE = new Button();
 			Button btnModern = new Button();
-			Button btnLoadFile = new Button();
-			Button btnSaveKey = new Button();
+			Button btnLoadKey = new Button();
+			Button btnSaveKeyLocal = new Button();
+			Button btnSaveKeyDB = new Button();
 			btnCaesarE.setText("Caesar Cipher");
 			btnModern.setText("Modern Cipher");
-			btnSaveKey.setText("Save Key");
-			btnLoadFile.setText("Load File");
+			btnSaveKeyLocal.setText("Save Key to File");
+			btnSaveKeyDB.setText("Save Key to DB");
+			btnLoadKey.setText("Load Key from File");
 			vboxLeft.getChildren().addAll(btnCaesarE, btnModern, menuBar);
 			root.setLeft(vboxLeft);
 
@@ -204,8 +206,7 @@ public class Main extends Application {
 				resultField.setEditable(false);				
 				Button submitButton = new Button("Submit");
 				submitEncrypt.getChildren().addAll(cb,submitButton);
-				
-				
+							
 				submitButton.setOnAction(event1 -> {
 
 					String text = textField.getText();
@@ -231,6 +232,7 @@ public class Main extends Application {
 				Label textLabel = new Label("Enter your text:");
 				TextField textField = new TextField();
 				Label keyLabel = new Label("Enter your key:");
+				Label showKeyLabel = new Label("Generated key:");
 				TextField showKeyField = new TextField();
 				TextField keyField = new TextField();
 
@@ -264,54 +266,72 @@ public class Main extends Application {
 				ownKey.setText("Use Your Own Key");
 				ownKey.setToggleGroup(group3);
 				row3.getChildren().addAll(generateKey, ownKey);
-
-				// button rb5 "Generate a Key" is selected
+				
 				generateKey.selectedProperty().addListener(new ChangeListener<Boolean>() {
 					public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected,
 							Boolean isNowSelected) {
-//						if (isNowSelected) {
-//							inputVBox2.getChildren().add(5, showKeyField);
-//							inputVBox2.getChildren().add(6, btnSaveKey);
-//							showKeyField.setEditable(false);
-//						} else {
-//							inputVBox2.getChildren().remove(5);
-//							inputVBox2.getChildren().remove(6);
-//						}
 						 if (isNowSelected) {
+							 if (!inputVBox2.getChildren().contains(showKeyLabel)) {
+					                inputVBox2.getChildren().add(6, showKeyLabel);
+					            }	
+					            
+					            if (!inputVBox2.getChildren().contains(btnSaveKeyLocal)) {
+					                inputVBox2.getChildren().add(10, btnSaveKeyLocal);
+					            }
 					            if (!inputVBox2.getChildren().contains(showKeyField)) {
-					                inputVBox2.getChildren().add(5, showKeyField);
+					                inputVBox2.getChildren().add(7, showKeyField);
 					            }
-					            if (!inputVBox2.getChildren().contains(btnSaveKey)) {
-					                inputVBox2.getChildren().add(6, btnSaveKey);
+					            if (!inputVBox2.getChildren().contains(btnSaveKeyDB)) {
+					                inputVBox2.getChildren().add(11, btnSaveKeyDB);
 					            }
+					            if (!inputVBox2.getChildren().contains(btnLoadKey)) {
+					                inputVBox2.getChildren().add(12, btnLoadKey);
+					            }
+					            
 					            showKeyField.setEditable(false);
 					        } else {
+					        	inputVBox2.getChildren().remove(showKeyLabel);
 					            inputVBox2.getChildren().remove(showKeyField);
-					            inputVBox2.getChildren().remove(btnSaveKey);
+					            inputVBox2.getChildren().remove(btnSaveKeyLocal);
+					            inputVBox2.getChildren().remove(btnLoadKey);
+					            
 					        }
 					    
 					}
 				});
 				// button "Use your own Key" is selected
-				HBox buttonBox = new HBox();
-				buttonBox.setSpacing(70);
-				buttonBox.getChildren().addAll(btnSaveKey, btnLoadFile);
+				HBox btnBoxinOwnKey = new HBox();
+				btnBoxinOwnKey.setSpacing(70);
+				btnBoxinOwnKey.getChildren().addAll(btnSaveKeyLocal, btnLoadKey);
 				ownKey.selectedProperty().addListener(new ChangeListener<Boolean>() {
 					@Override
 					public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected,
 							Boolean isNowSelected) {					
 						
 						 if (isNowSelected) {
-					            if (!inputVBox2.getChildren().contains(keyField)) {
-					                inputVBox2.getChildren().add(5, keyField);
+														
+							 if (!inputVBox2.getChildren().contains(showKeyLabel)) {
+					                inputVBox2.getChildren().add(6, showKeyLabel);
+					            }	
+					            
+					            if (!inputVBox2.getChildren().contains(btnSaveKeyLocal)) {
+					                inputVBox2.getChildren().add(10, btnSaveKeyLocal);
 					            }
-					            if (!inputVBox2.getChildren().contains(buttonBox)) {
-					                inputVBox2.getChildren().add(6, buttonBox);
+					            if (!inputVBox2.getChildren().contains(showKeyField)) {
+					                inputVBox2.getChildren().add(7, showKeyField);
+					            }
+					            if (!inputVBox2.getChildren().contains(btnSaveKeyDB)) {
+					                inputVBox2.getChildren().add(11, btnSaveKeyDB);
+					            }
+					            if (!inputVBox2.getChildren().contains(btnLoadKey)) {
+					                inputVBox2.getChildren().add(12, btnLoadKey);
 					            }
 					         
-					        } else {
-					            inputVBox2.getChildren().remove(keyField);
-					            inputVBox2.getChildren().remove(buttonBox);
+					        } else {					        	
+					        	inputVBox2.getChildren().remove(showKeyLabel);
+					            inputVBox2.getChildren().remove(showKeyField);
+					            inputVBox2.getChildren().remove(btnSaveKeyLocal);
+					            inputVBox2.getChildren().remove(btnLoadKey);
 					        }						
 					}
 				});
@@ -326,7 +346,7 @@ public class Main extends Application {
 				fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text Files", "*.txt")
 
 				);
-				btnSaveKey.setOnAction(event -> {
+				btnSaveKeyLocal.setOnAction(event -> {
 					java.io.File file = fileChooser.showSaveDialog(primaryStage);
 					try {
 						des1.saveKeyToFile(file);
@@ -428,7 +448,7 @@ public class Main extends Application {
 						submitButton, resultLable, resultField);
 				root.setCenter(inputVBox2);
 
-				btnLoadFile.setOnAction(event1 -> {
+				btnLoadKey.setOnAction(event1 -> {
 					FileChooser fc = new FileChooser();
 					File selectedFile = fc.showOpenDialog(primaryStage);
 					if (selectedFile != null) {
