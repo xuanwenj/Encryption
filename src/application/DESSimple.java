@@ -32,6 +32,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import javafx.stage.FileChooser;
+
 /**
  *
  * @author ahmed
@@ -41,10 +43,12 @@ public class DESSimple {
     private SecretKey secretkey;
     private String algorithm;
     
-    public DESSimple(String algorithm) throws NoSuchAlgorithmException 
+    public DESSimple(String algorithm, int keySize) throws NoSuchAlgorithmException 
     {
     	this.algorithm = algorithm;
-        generateKey();
+    	//int key size - int
+        generateKey(keySize);
+        System.out.println(keySize);
     }
     
     
@@ -52,9 +56,11 @@ public class DESSimple {
 	* Step 1. Generate a DES key using KeyGenerator 
     */
     
-    public void generateKey() throws NoSuchAlgorithmException 
+
+    public void generateKey(int keySize) throws NoSuchAlgorithmException 
     {
         KeyGenerator keyGen = KeyGenerator.getInstance(algorithm);
+        keyGen.init(keySize); // Set the desired key size: 128, 192, or 256 bits
         this.setSecretkey(keyGen.generateKey());        
     }
     
@@ -113,17 +119,20 @@ public class DESSimple {
     oos.close();
     }
     
-    public SecretKey loadKeyFile(String fileName) throws IOException {
-        byte[] keyBytes;
-        try (FileInputStream fis = new FileInputStream(fileName)) {
-            keyBytes = fis.readAllBytes();
-        }
-        return new SecretKeySpec(keyBytes, algorithm);
-    }
 
-    public SecretKey loadKeyFromFile() throws IOException {
-        return loadKeyFile("src\\application\\keyFile.txt");
+
+    public SecretKey loadKeyFromFile(File file) throws IOException, ClassNotFoundException {
+          	
+    	// Creates a file input stream linked with the specified file
+    	FileInputStream fileStream = new FileInputStream(file);
+
+    	// Creates an object input stream using the file input stream
+    	ObjectInputStream objStream = new ObjectInputStream(fileStream);
+    	SecretKey key = (SecretKey)objStream.readObject();
+    	//output.close();
+        objStream.close();
+    	
+         
+    	return key;
     }
-    
-    
 }
