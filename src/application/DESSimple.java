@@ -124,11 +124,4 @@ public class DESSimple {
 		return key;
 	}
 }
-//
-//public SecretKey loadKeyFile(String fileName) throws IOException {
-//    byte[] keyBytes;
-//    try (FileInputStream fis = new FileInputStream(fileName)) {
-//        keyBytes = fis.readAllBytes();
-//    }
-//    return new SecretKeySpec(keyBytes, algorithm);
-//}    
+   
