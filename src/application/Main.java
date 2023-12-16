@@ -76,6 +76,9 @@ public class Main extends Application {
 	
 	DESSimple des1;
 	DESSimple aes1;
+	DESSimple des2;
+	DESSimple aes2;
+	
 	int keySize;
 	RadioButton aes128 = new RadioButton();
 	RadioButton aes192 = new RadioButton();
@@ -471,6 +474,7 @@ public class Main extends Application {
 						try {
 							decryptedData = Base64.getDecoder().decode(text);
 							String decryptedText = aes1.decrypt(decryptedData);
+							
 							resultField.setText(decryptedText);
 						} catch (Exception e1) {
 							// TODO Auto-generated catch block
@@ -488,18 +492,23 @@ public class Main extends Application {
 					if (selectedFile != null) {
 						try {
 							if (btnDes.isSelected()) {
-								SecretKey loadedKey = des1.loadKeyFromFile(selectedFile);
-								des1.setSecretkey(loadedKey);
+								des2 = new DESSimple("DES", 56);
+								SecretKey loadedKey = des2.loadKeyFromFile(selectedFile);
+								des2.setSecretkey(loadedKey);
 								showKeyField.setText(Base64.getEncoder().encodeToString(loadedKey.getEncoded()));
 							} else if (btnAes.isSelected()) {
-								SecretKey loadedKey = aes1.loadKeyFromFile(selectedFile);
-								aes1.setSecretkey(loadedKey);
+								aes2 = new DESSimple("AES", 128);
+								SecretKey loadedKey = aes2.loadKeyFromFile(selectedFile);
+								aes2.setSecretkey(loadedKey);
 								showKeyField.setText(Base64.getEncoder().encodeToString(loadedKey.getEncoded()));
 							}
 						} catch (ClassNotFoundException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (NoSuchAlgorithmException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}
