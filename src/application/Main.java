@@ -85,7 +85,7 @@ public class Main extends Application {
 	RadioButton aes256 = new RadioButton();
 
 	
-		//commit
+		//comm
 
 	@Override
 	public void start(Stage primaryStage) throws NoSuchAlgorithmException {
