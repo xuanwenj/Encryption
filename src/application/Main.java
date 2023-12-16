@@ -76,8 +76,7 @@ public class Main extends Application {
 	
 	DESSimple des1;
 	DESSimple aes1;
-	DESSimple des2;
-	DESSimple aes2;
+	
 	
 	int keySize;
 	RadioButton aes128 = new RadioButton();
@@ -349,7 +348,11 @@ public class Main extends Application {
 				btnSaveKeyLocal.setOnAction(event -> {
 					java.io.File file = fileChooser.showSaveDialog(primaryStage);
 					try {
-						des1.saveKeyToFile(file);
+						if(btnDes.isSelected()) {
+							des1.saveKeyToFile(file);
+						}else if(btnAes.isSelected()) {
+							aes1.saveKeyToFile(file);
+						}						
 					} catch (Exception e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
@@ -489,14 +492,14 @@ public class Main extends Application {
 					if (selectedFile != null) {
 						try {
 							if (btnDes.isSelected()) {
-								des2 = new DESSimple("DES", 56);
-								SecretKey loadedKey = des2.loadKeyFromFile(selectedFile);
-								des2.setSecretkey(loadedKey);
+								
+								SecretKey loadedKey = des1.loadKeyFromFile(selectedFile);
+								des1.setSecretkey(loadedKey);
 								showKeyField.setText(Base64.getEncoder().encodeToString(loadedKey.getEncoded()));
 							} else if (btnAes.isSelected()) {
-								aes2 = new DESSimple("AES", 128);
-								SecretKey loadedKey = aes2.loadKeyFromFile(selectedFile);
-								aes2.setSecretkey(loadedKey);
+								
+								SecretKey loadedKey = aes1.loadKeyFromFile(selectedFile);
+								aes1.setSecretkey(loadedKey);
 								showKeyField.setText(Base64.getEncoder().encodeToString(loadedKey.getEncoded()));
 							}
 						} catch (ClassNotFoundException e1) {
@@ -505,9 +508,7 @@ public class Main extends Application {
 						} catch (IOException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
-						} catch (NoSuchAlgorithmException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
+						
 						}
 						// Use the loadedKey for decryption or any other operation
 						System.out.println("Key loaded successfully.");
