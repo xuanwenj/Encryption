@@ -84,10 +84,6 @@ public class Main extends Application {
 	RadioButton aes192 = new RadioButton();
 	RadioButton aes256 = new RadioButton();
 
-	
-		//comm
-	//test
-
 	@Override
 	public void start(Stage primaryStage) throws NoSuchAlgorithmException {
 		des1 = new DESSimple("DES", 56);
