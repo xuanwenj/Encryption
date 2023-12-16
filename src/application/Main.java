@@ -48,47 +48,41 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import java.sql.*;
 
 public class Main extends Application {
-	static final String JDBC_URL = "jdbc:mysql://127.0.0.1:3306/ebookshop";
-	static final String USERNAME = "root";
-	static final String PASSWORD = ""; // null password
-	List<String> algorithmList = new ArrayList<>();
+	static final String JDBC_URL = "jdbc:mysql://database-1.cxbdcyicswj2.ap-southeast-2.rds.amazonaws.com";
+	static final String USERNAME = "admin";
+	static final String PASSWORD = "X1122d0610"; // null password
+	//Connection connection = null;
+	
+	 private void connectToDatabase() throws SQLException, ClassNotFoundException {
+	        
+	        	//Class.forName("com.mysql.cj.jdbc.Driver");
+				Connection connection = DriverManager.getConnection(
+						JDBC_URL, USERNAME, PASSWORD);	
+				java.sql.Statement stmt = connection.createStatement();
+				System.out.println("Database connection successful!");
+				
 
+				 System.out.println("The SQL statement is: " );	
+	     	
+	    }
+	    
+	public static void main(String[] args) {
+	
+		launch(args);
+	}
+	
 	DESSimple des1;
 	DESSimple aes1;
 	int keySize;
 	RadioButton aes128 = new RadioButton();
 	RadioButton aes192 = new RadioButton();
 	RadioButton aes256 = new RadioButton();
-//
-//	public List<String> fetchNames() throws SQLException {
-//		try {
-//			Class.forName("com.mysql.cj.jdbc.Driver");
-//
-//			// Open a connection
-//			Connection connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
-//			java.sql.Statement statement = connection.createStatement();
-//			String sql = "SELECT * FROM algorithms";
-//			ResultSet resultSet = statement.executeQuery(sql);
-//			// 1/ Go through the result set to print it
-//			while (resultSet.next()) {
-//				// Retrieve data by column name
-//				String algorithmName = resultSet.getString("name");
-//				algorithmList.add(algorithmName);
-//
-//			}
-//			resultSet.close();
-//			statement.close();
-//			connection.close();
-//		} catch (ClassNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		// Close external resources
-//
-//		return algorithmList;
-//	}
+
+	
+		
 
 	@Override
 	public void start(Stage primaryStage) throws NoSuchAlgorithmException {
@@ -112,7 +106,7 @@ public class Main extends Application {
 	        loginPane.add(passwordField, 1, 1);
 	        loginPane.add(loginButton, 1, 2);
 
-	        Scene loginScene = new Scene(loginPane, 300, 150);
+	        Scene loginScene = new Scene(loginPane, 300, 300);
 	        BorderPane root = new BorderPane();
 	        Scene scene = new Scene(root, 400, 400);
 	        primaryStage.setScene(loginScene);
@@ -122,6 +116,15 @@ public class Main extends Application {
 		loginButton.setOnAction(event ->{
 			primaryStage.setScene(scene);
 	        primaryStage.show();
+	        try {
+				connectToDatabase();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		});
 		
 		 int loadedKeySize = readKeySize();
@@ -162,9 +165,6 @@ public class Main extends Application {
 				bitVox.setPadding(new Insets(20, 20, 20, 20));
 				bitVox.setSpacing(10);
 				ToggleGroup group = new ToggleGroup();
-//				aes128 = new RadioButton();
-//				aes192 = new RadioButton();
-//				aes256 = new RadioButton();
 				aes128.setText("AES-128");
 				aes128.setUserData(128);
 				aes192.setText("AES-192");
@@ -191,16 +191,21 @@ public class Main extends Application {
 				inputVBox1.setSpacing(10);
 				Label textLabel = new Label("Enter your text:");
 				TextField textField = new TextField();
-				// Label keyLabel = new Label("Enter your key:");
+				Label keyLabel = new Label("Enter your key:");
 				TextField keyField = new TextField();
 
 				ChoiceBox<String> cb = new ChoiceBox<String>(FXCollections.observableArrayList("Encrypt", "Decrypt"));
 				cb.setValue("Encrypt");
+				HBox submitEncrypt = new HBox();
+				submitEncrypt.setPadding(new Insets(0, 20, 20, 0));
+				submitEncrypt.setSpacing(10);
 				Label resultLable = new Label("Encrypted/Decrypted Result:");
 				TextField resultField = new TextField();
-				resultField.setEditable(false);
-
+				resultField.setEditable(false);				
 				Button submitButton = new Button("Submit");
+				submitEncrypt.getChildren().addAll(cb,submitButton);
+				
+				
 				submitButton.setOnAction(event1 -> {
 
 					String text = textField.getText();
@@ -214,7 +219,7 @@ public class Main extends Application {
 					}
 					resultField.setText(result);
 				});
-				inputVBox1.getChildren().addAll(textLabel, textField, keyField, cb, submitButton, resultLable,
+				inputVBox1.getChildren().addAll(textLabel, textField, keyLabel, keyField, submitEncrypt, resultLable,
 						resultField);
 				root.setCenter(inputVBox1);
 			});
@@ -294,16 +299,7 @@ public class Main extends Application {
 				ownKey.selectedProperty().addListener(new ChangeListener<Boolean>() {
 					@Override
 					public void changed(ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected,
-							Boolean isNowSelected) {
-//						if (isNowSelected) {
-//							inputVBox2.getChildren().add(5, keyField);
-//							inputVBox2.getChildren().add(6, buttonBox);
-//
-//						} else {
-//							inputVBox2.getChildren().remove(5);
-//							inputVBox2.getChildren().remove(6);
-//						}
-//						
+							Boolean isNowSelected) {					
 						
 						 if (isNowSelected) {
 					            if (!inputVBox2.getChildren().contains(keyField)) {
@@ -316,9 +312,7 @@ public class Main extends Application {
 					        } else {
 					            inputVBox2.getChildren().remove(keyField);
 					            inputVBox2.getChildren().remove(buttonBox);
-					        }
-						
-						
+					        }						
 					}
 				});
 				rowDESAES.setSpacing(90);
@@ -465,8 +459,7 @@ public class Main extends Application {
 
 			});// end of btn
 			
-			// the main scene
-			
+			// the main scene			
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			//primaryStage.setScene(scene);
 			//primaryStage.show();
@@ -516,7 +509,6 @@ public class Main extends Application {
 	    return loadedKeySize;
 	}
 
-	public static void main(String[] args) {
-		launch(args);
-	}
+	
 }
+
