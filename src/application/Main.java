@@ -225,7 +225,7 @@ public class Main extends Application {
 			btnSaveKeyLocal.setText("Save Key to File");
 			//btnSaveKeyDB.setText("Save Key to DB");
 			btnLoadKey.setText("Load Key from File");
-			Label labelSubmitFeedback = new Label("You need to choose all radio buttons to submit");
+			Label labelSubmitFeedback = new Label("Please select an option from each row of buttuns to submit");
 			labelSubmitFeedback.setVisible(false);
 			vboxLeft.getChildren().addAll(btnCaesarE, btnModern, menuBar);
 			root.setLeft(vboxLeft);
@@ -244,15 +244,42 @@ public class Main extends Application {
 				aes256.setUserData(256);
 				group.getToggles().addAll(aes128, aes192, aes256);
 
-				Button submit = new Button();
-				submit.setText("Submit");
+				Button btnsubmitInSetting = new Button();
+				btnsubmitInSetting.setText("Submit");
 				Label messageLabel = new Label("You need to choose before submit.");
 				messageLabel.setVisible(false);
-				bitVox.getChildren().addAll(aes128, aes192, aes256, submit, messageLabel);
+				bitVox.getChildren().addAll(aes128, aes192, aes256, btnsubmitInSetting, messageLabel);
 				root.setCenter(bitVox);
-
-				submit.setOnAction(event1 -> {
+				
+				//action on submit button in setting menu
+				btnsubmitInSetting.setOnAction(event1 -> {
 					saveKeySizeToFile((int) group.getSelectedToggle().getUserData());
+					if(aes128.isSelected()) {
+						try {
+							aes1.generateKey((int) aes128.getUserData());
+							System.out.println("key size of aes1 is" + aes128.getUserData());
+						} catch (NoSuchAlgorithmException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}else if(aes192.isSelected()) {
+						try {
+							aes1.generateKey((int) aes192.getUserData());
+							System.out.println("key size of aes1 is" + aes192.getUserData());
+						} catch (NoSuchAlgorithmException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}else if(aes256.isSelected()) {
+						try {
+							aes1.generateKey((int) aes256.getUserData());
+							System.out.println("key size of aes1 is" + aes256.getUserData());
+						} catch (NoSuchAlgorithmException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+					}
 				});
 			});
 			// action on CaesarE button
