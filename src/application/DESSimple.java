@@ -102,10 +102,7 @@ public class DESSimple {
 
 	public void saveKeyToFile(File fileName) throws Exception {
 		FileOutputStream fs = new FileOutputStream(fileName);
-
 		ObjectOutputStream oos = new ObjectOutputStream(fs);
-		// CipherOutputStream cos = new CipherOutputStream(new
-		// FileOutputStream(fileName),**algorithem*);
 		// Write the SecretKey object to the file
 		oos.writeObject(this.secretkey);
 		oos.close();
