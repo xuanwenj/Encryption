@@ -54,19 +54,56 @@ public class Main extends Application {
 	static final String JDBC_URL = "jdbc:mysql://database-1.cxbdcyicswj2.ap-southeast-2.rds.amazonaws.com";
 	static final String USERNAME = "admin";
 	static final String PASSWORD = "X1122d0610"; // null password
+	static final String PASSWORD_KEY = "+FiUvYg7wVRl0uRKAtZPJA==";
+	
+	ResultSet resultSet;
+	TextField usernameField;
+	PasswordField passwordField;
+	
 	//Connection connection = null;
 	
-	 private void connectToDatabase() throws SQLException, ClassNotFoundException {
-	        
+	 private Boolean connectToDatabase() throws SQLException, ClassNotFoundException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+		     String username = usernameField.getText();
 	        	//Class.forName("com.mysql.cj.jdbc.Driver");
 				Connection connection = DriverManager.getConnection(
 						JDBC_URL, USERNAME, PASSWORD);	
-				java.sql.Statement stmt = connection.createStatement();
-				System.out.println("Database connection successful!");
+				//java.sql.Statement stmt = connection.createStatement();
+				//String sqlQuery = "SELECT * FROM mydb1.users WHERE "; // Replace 'your_table_name' with your actual table name
+				String query = "SELECT * FROM mydb1.users WHERE userName = ?";
+				PreparedStatement preparedStatement = connection.prepareStatement(query);
+				preparedStatement.setString(1, username);
+		        // Executing the SELECT query
+				resultSet = preparedStatement.executeQuery();
+				if (resultSet.next()) {
+					// get the encryptd password from database;
+					String encyptedpassword = resultSet.getString("password");
+					//get the inputed password(wen#pass)
+					passwordField.getText();
+					//decrypt the encrypted password;
+					byte[] decryptedData = Base64.getDecoder().decode(encyptedpassword);
+					
+					DESSimple des2= new DESSimple("AES", 128);
+					// make the key into byte[]
+					byte[] decodedKey = Base64.getDecoder().decode(PASSWORD_KEY);
+					//set secretkey
+					SecretKey secretKey = new SecretKeySpec(decodedKey, "AES");
+					des2.setSecretkey(secretKey);
+					//get the decrypted key
+					String decryptedKey = des2.decrypt(decryptedData);
+					
+					if(decryptedKey.equals(encyptedpassword)) {
+						return true;
+					}
+				}else {
+					System.out.println("No password found for user: " + username);
+					
+				}
 				
-
-				 System.out.println("The SQL statement is: " );	
-	     	
+		       // resultSet = stmt.executeQuery(sqlQuery);
+		        
+				System.out.println("Database connection successful!");
+				System.out.println("The SQL statement is: " );	
+				return false;
 	    }
 	    
 	public static void main(String[] args) {
@@ -94,9 +131,9 @@ public class Main extends Application {
 	        loginPane.setHgap(10);
 
 	        Label usernameLabel = new Label("Username:");
-	        TextField usernameField = new TextField();
+	        usernameField = new TextField();
 	        Label passwordLabel = new Label("Password:");
-	        PasswordField passwordField = new PasswordField();
+	        passwordField = new PasswordField();
 	        Button loginButton = new Button("Login");
 
 	        loginPane.add(usernameLabel, 0, 0);
@@ -113,17 +150,49 @@ public class Main extends Application {
 		
 		
 		loginButton.setOnAction(event ->{
-			primaryStage.setScene(scene);
-	        primaryStage.show();
-	        try {
-				connectToDatabase();
-			} catch (SQLException e) {
+			try {
+				if(connectToDatabase()) {
+				
+				primaryStage.setScene(scene);
+				
+				primaryStage.show();
+				}else {
+					System.out.println("Invalid password");
+				}
+			} catch (InvalidKeyException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvalidAlgorithmParameterException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalBlockSizeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (BadPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+//	        try {
+//				connectToDatabase();
+//			} catch (SQLException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (ClassNotFoundException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 		});
 		
 		 int loadedKeySize = readKeySize();
@@ -312,7 +381,6 @@ public class Main extends Application {
 							 if (!inputVBox2.getChildren().contains(inputKeyLable)) {
 					                inputVBox2.getChildren().add(6, inputKeyLable);
 					            }	
-
 					            if (!inputVBox2.getChildren().contains(btnSaveKeyLocal)) {
 					                inputVBox2.getChildren().add(10, btnSaveKeyLocal);
 					            }
@@ -329,8 +397,7 @@ public class Main extends Application {
 					        	inputVBox2.getChildren().remove(inputKeyLable);
 					            inputVBox2.getChildren().remove(showKeyField);
 					            inputVBox2.getChildren().remove(btnSaveKeyLocal);
-					            inputVBox2.getChildren().remove(btnLoadKey);
-					           
+					            inputVBox2.getChildren().remove(btnLoadKey);					           
 					        }						
 					}
 				});
@@ -572,4 +639,7 @@ public class Main extends Application {
 
 	
 }
-
+//CREATE TABLE users (    
+//		id INT AUTO_INCREMENT PRIMARY KEY,    
+//		username VARCHAR(50) NOT NULL,    
+//		encrypted_password BLOB NOT NULL,
