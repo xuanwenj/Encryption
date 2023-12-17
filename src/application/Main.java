@@ -54,11 +54,12 @@ public class Main extends Application {
 	static final String JDBC_URL = "jdbc:mysql://database-1.cxbdcyicswj2.ap-southeast-2.rds.amazonaws.com";
 	static final String USERNAME = "admin";
 	static final String PASSWORD = "X1122d0610"; // null password
-	static final String PASSWORD_KEY = "+FiUvYg7wVRl0uRKAtZPJA==";
+	//static final String PASSWORD_KEY = "+FiUvYg7wVRl0uRKAtZPJA==";
 	
 	ResultSet resultSet;
 	TextField usernameField;
 	PasswordField passwordField;
+	String encyptedpassword;
 	
 	//Connection connection = null;
 	
@@ -76,24 +77,44 @@ public class Main extends Application {
 				resultSet = preparedStatement.executeQuery();
 				if (resultSet.next()) {
 					// get the encryptd password from database;
-					String encyptedpassword = resultSet.getString("password");
+					encyptedpassword = resultSet.getString("password");
 					//get the inputed password(wen#pass)
-					passwordField.getText();
-					//decrypt the encrypted password;
+					String enteredPassword = passwordField.getText();
+					//decode the encrypted password for decryption;
+					
 					byte[] decryptedData = Base64.getDecoder().decode(encyptedpassword);
+					System.out.println("the decrypted data is :"+ decryptedData);
 					
 					DESSimple des2= new DESSimple("AES", 128);
-					// make the key into byte[]
-					byte[] decodedKey = Base64.getDecoder().decode(PASSWORD_KEY);
-					//set secretkey
-					SecretKey secretKey = new SecretKeySpec(decodedKey, "AES");
-					des2.setSecretkey(secretKey);
-					//get the decrypted key
-					String decryptedKey = des2.decrypt(decryptedData);
-					
-					if(decryptedKey.equals(encyptedpassword)) {
-						return true;
+					//load the key from file 
+					String filePath = "src\\application\\keytoencryptpassword.txt"; 
+			        File keyFile = new File(filePath);
+			        SecretKey loadedKey;
+					try {
+						loadedKey = des2.loadKeyFromFile(keyFile);
+						des2.setSecretkey(loadedKey);
+						String decryptedKey = des2.decrypt(decryptedData);
+						if(decryptedKey.equals(enteredPassword)) {
+							return true;
+						}
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
+					//byte[] decodedKey = Base64.getDecoder().decode(loadedKey);
+					
+					//byte[] decodedKey = PASSWORD_KEY.getBytes();
+					//set secretkey
+			        
+					//SecretKey secretKey = new SecretKeySpec(loadedKey, "AES");
+					
+					//get the decrypted key
+					
+					
+					
 				}else {
 					System.out.println("No password found for user: " + username);
 					
@@ -152,7 +173,9 @@ public class Main extends Application {
 		loginButton.setOnAction(event ->{
 			try {
 				if(connectToDatabase()) {
-				
+					System.out.println("The password entered by user is:" + passwordField.getText() );
+					
+					System.out.println("The encrypted password saved in database is " + encyptedpassword);
 				primaryStage.setScene(scene);
 				
 				primaryStage.show();
